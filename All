@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <img id = "WhiteKingImg" hidden src="http://www.clker.com/cliparts/d/3/0/7/12205466061204605977portablejim_Chess_tile_-_King_3.svg.med.png" width="50" height="50">
+    <img id = "WhiteQueenImg" hidden src="http://www.clker.com/cliparts/2/d/b/3/1220546638446611812portablejim_Chess_tile_-_Queen_3.svg.med.png" width="50" height="50">
+    <img id = "WhiteBishopImg" hidden src="http://www.clker.com/cliparts/0/b/a/3/12205465671996376634portablejim_Chess_tile_-_Bishop_1.svg.med.png" width="50" height="50">
+    <img id = "WhiteKnightImg" hidden src="http://www.clker.com/cliparts/5/8/0/f/12205467171891699302portablejim_Chess_tile_-_Knight_2.svg.med.png" width="50" height="50">
+    <img id = "WhiteRookImg" hidden src="http://www.clker.com/cliparts/d/b/2/4/12205466671724840789portablejim_Chess_tile_-_Rook_3.svg.med.png" width="50" height="50">
+    <img id = "WhitePawnImg" hidden src="http://www.clker.com/cliparts/b/2/6/7/1220546691510955154portablejim_Chess_tile_-_Pawn_3.svg.med.png" width="50" height="50">
+
+    <img id = "BlackKingImg" hidden src="http://www.clker.com/cliparts/3/8/d/6/12205466202120645650portablejim_Chess_tile_-_King_1.svg.med.png" width="50" height="50">
+    <img id = "BlackQueenImg" hidden src="http://www.clker.com/cliparts/3/2/8/3/122054664916136449portablejim_Chess_tile_-_Queen_1.svg.med.png" width="50" height="50">
+    <img id = "BlackBishopImg" hidden src="http://www.clker.com/cliparts/2/2/f/a/12205465771421620738portablejim_Chess_tile_-_Bishop_2.svg.med.png" width="50" height="50">
+    <img id = "BlackKnightImg" hidden src="http://www.clker.com/cliparts/b/2/d/1/1220546725404626993portablejim_Chess_tile_-_Knight_3.svg.med.png" width="50" height="50">
+    <img id = "BlackRookImg" hidden src="http://www.clker.com/cliparts/5/6/3/7/12205466761087781847portablejim_Chess_tile_-_Rook_1.svg.med.png" width="50" height="50">
+    <img id = "BlackPawnImg" hidden src="http://www.clker.com/cliparts/0/f/9/5/1220546699832264553portablejim_Chess_tile_-_Pawn_1.svg.med.png" width="50" height="50">
+    
+    <canvas id="myCanvas" width="640" height="640"
+    style="border:none;background:#66ccff">
+    </canvas>
+    <br>
+    <br>
+    White : <input type = 'text' id = 'WhiteNameField'/>
+    <br>
+    Black : <input type = 'text' id = 'BlackNameField'/>
+    <br>
+    Result : <select id = 'ResultSelect'>
+        <option value="1-0">1-0</option>
+        <option value="0-1">0-1</option>
+        <option value="1/2-1/2">1/2-1/2</option>
+    </select>
+    <br>
+    <input type="button" id="DownloadButton" value="Download"/>
+    <br>
+    <br>
+    <p id = NotationParagraph></p>
+    <script>
+    var c = document.getElementById("myCanvas");
+var ctx = c.getContext("2d");
+
+//Making Checkboard
+var SquareColor;
+var SquareSize = 80
+function DrawCheckboard(){
+    for (i = 0; i < 8; i++) {
+        for (j = 0; j < 8; j++) {
+            if ((i + j) % 2 == 0) {
+                SquareColor = 'white';
+            } else {
+                SquareColor = 'gray';
+            }
+            ctx.fillStyle = SquareColor
+            ctx.fillRect(j * SquareSize, i * SquareSize, SquareSize, SquareSize);
+        }
+    }
+}
+
+//Square array
+var Square = new Array(0)
+for (i = 1; i < 9; i++) {
+    Square[i] = new Array(0)
+}
+
+//Piece object
+function Piece(file,rank,type,color,live){
+    this.file = file
+    this.rank = rank
+    this.type = type
+    this.color = color
+    this.live = live
+  }
+
+//Move object
+var Moves = new Array(0)
+var SelectedMove;
+function Move(fileFrom,rankFrom,fileTo,rankTo,piece,take,notation){
+    this.fileFrom = fileFrom
+    this.fileTo = fileTo
+    this.rankFrom = rankFrom
+    this.rankTo = rankTo
+    this.piece = piece
+    this.notation = notation
+    this.take = take
+  }
+
+//Natation vars
+var a = 1
+var b = 2
+var c = 3
+var d = 4
+var e = 5
+var f = 6
+var g = 7
+var h = 8
+
+//Making starting position
+function SetStartingPostion(){
+    Pieces['WhiteKing'].file = e
+    Pieces['WhiteKing'].rank = 1
+    Pieces['WhiteKing'].live = 1
+    Square[Pieces['WhiteKing'].file][Pieces['WhiteKing'].rank] = Pieces['WhiteKing']
+    Pieces['WhiteQueen'].file = d
+    Pieces['WhiteQueen'].rank = 1
+    Pieces['WhiteQueen'].live = 1
+    Square[Pieces['WhiteQueen'].file][Pieces['WhiteQueen'].rank] = Pieces['WhiteQueen']
+    Pieces['WhiteRook'][1].file = a
+    Pieces['WhiteRook'][1].rank = 1
+    Pieces['WhiteRook'][1].live = 1
+    Square[Pieces['WhiteRook'][1].file][Pieces['WhiteRook'][1].rank] = Pieces['WhiteRook'][1]
+    Pieces['WhiteRook'][2].file = h
+    Pieces['WhiteRook'][2].rank = 1
+    Pieces['WhiteRook'][2].live = 1
+    Square[Pieces['WhiteRook'][2].file][Pieces['WhiteRook'][2].rank] = Pieces['WhiteRook'][2]
+    Pieces['WhiteBishop'][1].file = c
+    Pieces['WhiteBishop'][1].rank = 1
+    Pieces['WhiteBishop'][1].live = 1
+    Square[Pieces['WhiteBishop'][1].file][Pieces['WhiteBishop'][1].rank] = Pieces['WhiteBishop'][1]
+    Pieces['WhiteBishop'][2].file = f
+    Pieces['WhiteBishop'][2].rank = 1
+    Pieces['WhiteBishop'][2].live = 1
+    Square[Pieces['WhiteBishop'][2].file][Pieces['WhiteBishop'][2].rank] = Pieces['WhiteBishop'][2]
+    Pieces['WhiteKnight'][1].file = b
+    Pieces['WhiteKnight'][1].rank = 1
+    Pieces['WhiteKnight'][1].live = 1
+    Square[Pieces['WhiteKnight'][1].file][Pieces['WhiteKnight'][1].rank] = Pieces['WhiteKnight'][1]
+    Pieces['WhiteKnight'][2].file = g
+    Pieces['WhiteKnight'][2].rank = 1
+    Pieces['WhiteKnight'][2].live = 1
+    Square[Pieces['WhiteKnight'][2].file][Pieces['WhiteKnight'][2].rank] = Pieces['WhiteKnight'][2]
+    for(i = 1;i < 9;i++){
+        Pieces['WhitePawn'][i].file = i
+        Pieces['WhitePawn'][i].rank = 2
+        Pieces['WhitePawn'][i].live = 1
+        Square[Pieces['WhitePawn'][i].file][Pieces['WhitePawn'][i].rank] = Pieces['WhitePawn'][i]
+    }
+    Pieces['BlackKing'].file = e
+    Pieces['BlackKing'].rank = 8
+    Pieces['BlackKing'].live = 1
+    Square[Pieces['BlackKing'].file][Pieces['BlackKing'].rank] = Pieces['BlackKing']
+    Pieces['BlackQueen'].file = d
+    Pieces['BlackQueen'].rank = 8
+    Pieces['BlackQueen'].live = 1
+    Square[Pieces['BlackQueen'].file][Pieces['BlackQueen'].rank] = Pieces['BlackQueen']
+    Pieces['BlackRook'][1].file = a
+    Pieces['BlackRook'][1].rank = 8
+    Pieces['BlackRook'][1].live = 1
+    Square[Pieces['BlackRook'][1].file][Pieces['BlackRook'][1].rank] = Pieces['BlackRook'][1]
+    Pieces['BlackRook'][2].file = h
+    Pieces['BlackRook'][2].rank = 8
+    Pieces['BlackRook'][2].live = 1
+    Square[Pieces['BlackRook'][2].file][Pieces['BlackRook'][2].rank] = Pieces['BlackRook'][2]
+    Pieces['BlackBishop'][1].file = c
+    Pieces['BlackBishop'][1].rank = 8
+    Pieces['BlackBishop'][1].live = 1
+    Square[Pieces['BlackBishop'][1].file][Pieces['BlackBishop'][1].rank] = Pieces['BlackBishop'][1]
+    Pieces['BlackBishop'][2].file = f
+    Pieces['BlackBishop'][2].rank = 8
+    Pieces['BlackBishop'][2].live = 1
+    Square[Pieces['BlackBishop'][2].file][Pieces['BlackBishop'][2].rank] = Pieces['BlackBishop'][2]
+    Pieces['BlackKnight'][1].file = b
+    Pieces['BlackKnight'][1].rank = 8
+    Pieces['BlackKnight'][1].live = 1
+    Square[Pieces['BlackKnight'][1].file][Pieces['BlackKnight'][1].rank] = Pieces['BlackKnight'][1]
+    Pieces['BlackKnight'][2].file = g
+    Pieces['BlackKnight'][2].rank = 8
+    Pieces['BlackKnight'][2].live = 1
+    Square[Pieces['BlackKnight'][2].file][Pieces['BlackKnight'][2].rank] = Pieces['BlackKnight'][2]
+    for(i = 1;i < 9;i++){
+        Pieces['BlackPawn'][i].file = i
+        Pieces['BlackPawn'][i].rank = 7
+        Pieces['BlackPawn'][i].live = 1
+        Square[Pieces['BlackPawn'][i].file][Pieces['BlackPawn'][i].rank] = Pieces['BlackPawn'][i]
+    }
+}
+
+//Making Piece objects
+var Pieces = new Array(0)
+Pieces['WhiteKing'] = new Piece(e,1,'King','White',1)
+Pieces['WhiteQueen'] = new Piece(d,1,'Queen','White',1)
+Pieces['WhiteRook'] = new Array()
+Pieces['WhiteRook'][1] = new Piece(a,1,'Rook','White',1)
+Pieces['WhiteRook'][2] = new Piece(h,1,'Rook','White',1)
+Pieces['WhiteBishop'] = new Array(0)
+Pieces['WhiteBishop'][1] = new Piece(c,1,'Bishop','White',1)
+Pieces['WhiteBishop'][2] = new Piece(f,1,'Bishop','White',1)
+Pieces['WhiteKnight'] = new Array(0)
+Pieces['WhiteKnight'][1] = new Piece(b,1,'Knight','White',1)
+Pieces['WhiteKnight'][2] = new Piece(g,1,'Knight','White',1)
+Pieces['WhitePawn'] = new Array(0)
+for(i = 1;i < 9;i++){
+    Pieces['WhitePawn'][i] = new Piece(i,2,'Pawn','White',1)
+}
+
+Pieces['BlackKing'] = new Piece(e,8,'King','Black',1)
+Pieces['BlackQueen'] = new Piece(d,8,'Queen','Black',1)
+Pieces['BlackRook'] = new Array()
+Pieces['BlackRook'][1] = new Piece(a,8,'Rook','Black',1)
+Pieces['BlackRook'][2] = new Piece(h,8,'Rook','Black',1)
+Pieces['BlackBishop'] = new Array(0)
+Pieces['BlackBishop'][1] = new Piece(c,8,'Bishop','Black',1)
+Pieces['BlackBishop'][2] = new Piece(f,8,'Bishop','Black',1)
+Pieces['BlackKnight'] = new Array(0)
+Pieces['BlackKnight'][1] = new Piece(b,8,'Knight','Black',1)
+Pieces['BlackKnight'][2] = new Piece(g,8,'Knight','Black',1)
+Pieces['BlackPawn'] = new Array(0)
+for(i = 1;i < 9;i++){
+    Pieces['BlackPawn'][i] = new Piece(i,7,'Pawn','Black',1)
+    }
+
+//Transforming images to vars
+var WhiteKingImg = document.getElementById("WhiteKingImg");
+var WhiteQueenImg = document.getElementById("WhiteQueenImg");
+var WhiteRookImg = document.getElementById("WhiteRookImg");
+var WhiteBishopImg = document.getElementById("WhiteBishopImg");
+var WhiteKnightImg = document.getElementById("WhiteKnightImg");
+var WhitePawnImg = document.getElementById("WhitePawnImg");
+
+var BlackKingImg = document.getElementById("BlackKingImg");
+var BlackQueenImg = document.getElementById("BlackQueenImg");
+var BlackRookImg = document.getElementById("BlackRookImg");
+var BlackBishopImg = document.getElementById("BlackBishopImg");
+var BlackKnightImg = document.getElementById("BlackKnightImg");
+var BlackPawnImg = document.getElementById("BlackPawnImg");
+
+//Checking click
+var CurrentPiece;
+var CursorFile;
+var CursorRank;
+var State = 0
+var OnTurn = 'White'
+var CurrentMove;
+document.onmousedown = function(e){
+    if(e.pageX > 0 && e.pageX < SquareSize * 8 && e.pageY > 0 && e.pageY < SquareSize * 8){
+        CursorFile = Math.ceil(e.pageX / SquareSize)
+        CursorRank = Math.ceil(8 - e.pageY / SquareSize)
+        if(State == 0){
+            CurrentPiece = Square[CursorFile][CursorRank]
+            if(CurrentPiece && CurrentPiece.color == OnTurn)
+                State = 1
+            }else if(CurrentPiece == Square[CursorFile][CursorRank]){
+                State = 0
+            }else{
+                State = 0
+                if(Moves.length > SelectedMove){
+                    for(i = Moves.length - SelectedMove;i > 0;i--){
+                        Moves.pop()
+                    }
+                }
+                Moves[Moves.length] = new Move(CurrentPiece.file,CurrentPiece.rank,CursorFile,CursorRank,CurrentPiece,'')
+                SelectedMove = Moves.length
+                CurrentMove = Moves[Moves.length - 1]
+                console.log(CheckLegalMove(CurrentPiece,CurrentMove))
+                if(OnTurn == 'White'){
+                    OnTurn = 'Black'
+                }else{
+                    OnTurn = 'White'
+                }
+        }
+        LoadPieces()
+    }
+}
+
+//Checking legal move
+var ReturnText;
+function CheckLegalMove(p,m){
+    if(Square[m.fileTo][m.rankTo]){
+        if(Square[m.fileTo][m.rankTo].color == OnTurn)
+        return('Ilegal')
+        else
+        m.take = 'x'
+    }
+    switch (p.type) {
+        case 'King':
+            if((m.rankFrom + 1 == m.rankTo && m.fileFrom == m.fileTo) || (m.rankFrom - 1 == m.rankTo && m.fileFrom == m.fileTo) || (m.fileFrom + 1 == m.fileTo && m.rankFrom == m.rankTo) || (m.fileFrom - 1 == m.fileTo && m.rankFrom == m.rankTo) || (m.rankFrom - 1 == m.rankTo && m.fileFrom + 1 == m.fileTo) || (m.rankFrom + 1 == m.rankTo && m.fileFrom - 1 == m.fileTo) || (m.rankFrom - 1 == m.rankTo && m.fileFrom - 1 == m.fileTo) || (m.rankFrom + 1 == m.rankTo && m.fileFrom + 1 == m.fileTo))
+            return('Legal')
+            else
+            return('Ilegal')
+
+        case 'Queen':
+            ReturnText = 'Ilegal'
+            for(i = 1; i < 8; i ++){
+                if(m.rankFrom + i == m.rankTo && m.fileFrom + i == m.fileTo)
+                    ReturnText = 'Legal'
+                if(m.rankFrom - i == m.rankTo && m.fileFrom + i == m.fileTo)
+                    ReturnText = 'Legal'
+                if(m.rankFrom + i == m.rankTo && m.fileFrom - i == m.fileTo)
+                    ReturnText = 'Legal'
+                if(m.rankFrom - i == m.rankTo && m.fileFrom - i == m.fileTo)
+                    ReturnText = 'Legal'
+                if(m.rankFrom == m.rankTo || m.fileFrom == m.fileTo)
+                    ReturnText = 'Legal'
+            }
+            return(ReturnText)
+
+        case 'Rook':
+            if(m.rankFrom == m.rankTo || m.fileFrom == m.fileTo)
+                return('Legal')
+            else
+                return('Ilegal')
+
+        case 'Bishop':
+            ReturnText = 'Ilegal'
+            for(i = 1; i < 8; i ++){
+                if(m.rankFrom + i == m.rankTo && m.fileFrom + i == m.fileTo)
+                    ReturnText = 'Legal'
+                if(m.rankFrom - i == m.rankTo && m.fileFrom + i == m.fileTo)
+                    ReturnText = 'Legal'
+                if(m.rankFrom + i == m.rankTo && m.fileFrom - i == m.fileTo)
+                    ReturnText = 'Legal'
+                if(m.rankFrom - i == m.rankTo && m.fileFrom - i == m.fileTo)
+                    ReturnText = 'Legal'
+            }
+            return(ReturnText)
+            
+        case 'Knight':
+            if(((m.rankFrom - 2 == m.rankTo || m.rankFrom + 2 == m.rankTo) && (m.fileFrom - 1 == m.fileTo || m.fileFrom + 1 == m.fileTo)) || ((m.fileFrom - 2 == m.fileTo || m.fileFrom + 2 == m.fileTo) && (m.rankFrom - 1 == m.rankTo || m.rankFrom + 1 == m.rankTo)))
+                return('Legal')
+            else
+                return('Ilegal')
+
+        case 'Pawn': 
+            if(OnTurn == 'White'){
+                if(m.rankFrom < m.rankTo){
+                    if(m.fileFrom == m.fileTo && m.take !== 'x'){
+                        if(m.rankFrom + 1 < m.rankTo){
+                            if(m.rankFrom == 2 && m.rankFrom + 2 == m.rankTo){
+                                return('Legal')
+                            }else{
+                                return('Ilegal')
+                            }
+                        }else{
+                            return('Legal')
+                        }
+                    }else{
+                        if((m.fileFrom + 1 == m.fileTo || m.fileFrom - 1 == m.fileTo) && m.rankFrom + 1 == m.rankTo && m.take == 'x'){
+                            return('Legal')
+                        }else{
+                            return('Ilegal')
+                        }
+                    }
+                }else{
+                    return('Ilegal')
+                }
+        }else{
+            if(m.rankFrom > m.rankTo){
+                if(m.fileFrom == m.fileTo && m.take !== 'x'){
+                    if(m.rankFrom - 1 > m.rankTo){
+                        if(m.rankFrom == 7 && m.rankFrom - 2 == m.rankTo){
+                            return('Legal')
+                        }else{
+                            return('Ilegal')
+                        }
+                    }else{
+                        return('Legal')
+                    }
+                }else{
+                    if((m.fileFrom + 1 == m.fileTo || m.fileFrom - 1 == m.fileTo) && m.rankFrom - 1 == m.rankTo && m.take == 'x'){
+                        return('Legal')
+                    }else{
+                        return('Ilegal')
+                    }
+                }
+            }else{
+                return('Ilegal')
+            }
+        }
+    }
+}
+
+//Loading position
+var NotationParagraph = document.getElementById('NotationParagraph')
+var Notation = ''
+function LoadPieces(){
+    ctx.clearRect(0, 0, SquareSize * 8, SquareSize * 8);
+    DrawCheckboard()
+    for (i = 1; i < 9; i++) {
+        for (j = 1; j < 9; j++) {
+            Square[i][j] = null
+        }
+    }
+    SetStartingPostion()
+    for(i = 0;i < SelectedMove;i++){
+        if(Square[Moves[i].fileTo][Moves[i].rankTo]){
+            Square[Moves[i].fileTo][Moves[i].rankTo].live = 0
+            Moves[i].take = 'x'
+        }
+        if(Moves[i].piece.type == 'King' && Moves[i].piece.color == 'White' && Moves[i].fileFrom == e && Moves[i].rankFrom == 1){
+            if(Moves[i].fileTo == g && Moves[i].rankTo == 1 && Square[h][1].type == 'Rook' && Square[h][1].color == 'White' && Square[f][1] == null && Square[g][1] == null){
+                Square[h][1].file = f
+                Square[h][1].rank = 1
+                Square[f][1] = Square[h][1]
+                Square[h][1] = null
+                Moves[i].notation = '0-0'
+            }
+            if(Moves[i].fileTo == c && Moves[i].rankTo == 1 && Square[a][1].type == 'Rook' && Square[a][1].color == 'White' && Square[b][1] == null && Square[c][1] == null && Square[d][1] == null){
+                Square[a][1].file = d
+                Square[a][1].rank = 1
+                Square[d][1] = Square[a][1]
+                Square[a][1] = null
+                Moves[i].notation = '0-0-0'
+            }
+        }
+        if(Moves[i].piece.type == 'King' && Moves[i].piece.color == 'Black' && Moves[i].fileFrom == e && Moves[i].rankFrom == 8){
+            if(Moves[i].fileTo == g && Moves[i].rankTo == 8 && Square[h][8].type == 'Rook' && Square[h][8].color == 'Black' && Square[f][8] == null && Square[g][8] == null){
+                Square[h][8].file = f
+                Square[h][8].rank = 8
+                Square[f][8] = Square[h][8]
+                Square[h][8] = null
+                Moves[i].notation = '0-0'
+            }
+            if(Moves[i].fileTo == c && Moves[i].rankTo == 8 && Square[a][8].type == 'Rook' && Square[a][8].color == 'Black' && Square[b][8] == null && Square[c][8] == null && Square[d][8] == null){
+                Square[a][8].file = d
+                Square[a][8].rank = 8
+                Square[d][8] = Square[a][8]
+                Square[a][8] = null
+                Moves[i].notation = '0-0-0'
+            }
+        }
+        Moves[i].piece.file = Moves[i].fileTo
+        Moves[i].piece.rank = Moves[i].rankTo
+        Square[Moves[i].piece.file][Moves[i].piece.rank] = Moves[i].piece
+        Square[Moves[i].fileFrom][Moves[i].rankFrom] = null
+    }
+    
+    getNotation()
+    getText()
+    document.getElementById("NotationParagraph").innerHTML = Notation;
+    if(Pieces['WhiteKing'].live == 1){
+    ctx.drawImage(WhiteKingImg, Pieces['WhiteKing'].file * SquareSize - SquareSize, (8 - Pieces['WhiteKing'].rank) * SquareSize, SquareSize, SquareSize);
+    }
+    if(Pieces['WhiteQueen'].live == 1){
+    ctx.drawImage(WhiteQueenImg, Pieces['WhiteQueen'].file * SquareSize - SquareSize, (8 - Pieces['WhiteQueen'].rank) * SquareSize, SquareSize, SquareSize);
+    }
+    if(Pieces['WhiteRook'][1].live == 1){
+    ctx.drawImage(WhiteRookImg, Pieces['WhiteRook'][1].file * SquareSize - SquareSize, (8 - Pieces['WhiteRook'][1].rank) * SquareSize, SquareSize, SquareSize);
+    }
+    if(Pieces['WhiteRook'][2].live == 1){
+    ctx.drawImage(WhiteRookImg, Pieces['WhiteRook'][2].file * SquareSize - SquareSize, (8 - Pieces['WhiteRook'][2].rank) * SquareSize, SquareSize, SquareSize);
+    }
+    if(Pieces['WhiteBishop'][1].live == 1){
+    ctx.drawImage(WhiteBishopImg, Pieces['WhiteBishop'][1].file * SquareSize - SquareSize, (8 - Pieces['WhiteBishop'][1].rank) * SquareSize, SquareSize, SquareSize);
+    }
+    if(Pieces['WhiteBishop'][2].live == 1){
+    ctx.drawImage(WhiteBishopImg, Pieces['WhiteBishop'][2].file * SquareSize - SquareSize, (8 - Pieces['WhiteBishop'][2].rank) * SquareSize, SquareSize, SquareSize);
+    }
+    if(Pieces['WhiteKnight'][1].live == 1){
+    ctx.drawImage(WhiteKnightImg, Pieces['WhiteKnight'][1].file * SquareSize - SquareSize, (8 - Pieces['WhiteKnight'][1].rank) * SquareSize, SquareSize, SquareSize);
+    }
+    if(Pieces['WhiteKnight'][2].live == 1){
+    ctx.drawImage(WhiteKnightImg, Pieces['WhiteKnight'][2].file * SquareSize - SquareSize, (8 - Pieces['WhiteKnight'][2].rank) * SquareSize, SquareSize, SquareSize);
+    }
+    for(i = 1;i < 9;i++){
+        if(Pieces['WhitePawn'][i].live == 1){
+        ctx.drawImage(WhitePawnImg, Pieces['WhitePawn'][i].file * SquareSize - SquareSize, (8 - Pieces['WhitePawn'][i].rank) * SquareSize, SquareSize, SquareSize);
+        }
+    }
+
+    if(Pieces['BlackKing'].live == 1){
+        ctx.drawImage(BlackKingImg, Pieces['BlackKing'].file * SquareSize - SquareSize, (8 - Pieces['BlackKing'].rank) * SquareSize, SquareSize, SquareSize);
+        }
+    if(Pieces['BlackQueen'].live == 1){
+        ctx.drawImage(BlackQueenImg, Pieces['BlackQueen'].file * SquareSize - SquareSize, (8 - Pieces['BlackQueen'].rank) * SquareSize, SquareSize, SquareSize);
+    }
+    if(Pieces['BlackRook'][1].live == 1){
+        ctx.drawImage(BlackRookImg, Pieces['BlackRook'][1].file * SquareSize - SquareSize, (8 - Pieces['BlackRook'][1].rank) * SquareSize, SquareSize, SquareSize);
+    }
+    if(Pieces['BlackRook'][2].live == 1){
+        ctx.drawImage(BlackRookImg, Pieces['BlackRook'][2].file * SquareSize - SquareSize, (8 - Pieces['BlackRook'][2].rank) * SquareSize, SquareSize, SquareSize);
+    }
+    if(Pieces['BlackBishop'][1].live == 1){
+        ctx.drawImage(BlackBishopImg, Pieces['BlackBishop'][1].file * SquareSize - SquareSize, (8 - Pieces['BlackBishop'][1].rank) * SquareSize, SquareSize, SquareSize);
+    }
+    if(Pieces['BlackBishop'][2].live == 1){
+        ctx.drawImage(BlackBishopImg, Pieces['BlackBishop'][2].file * SquareSize - SquareSize, (8 - Pieces['BlackBishop'][2].rank) * SquareSize, SquareSize, SquareSize);
+    }
+    if(Pieces['BlackKnight'][1].live == 1){
+        ctx.drawImage(BlackKnightImg, Pieces['BlackKnight'][1].file * SquareSize - SquareSize, (8 - Pieces['BlackKnight'][1].rank) * SquareSize, SquareSize, SquareSize);
+    }
+    if(Pieces['BlackKnight'][2].live == 1){
+        ctx.drawImage(BlackKnightImg, Pieces['BlackKnight'][2].file * SquareSize - SquareSize, (8 - Pieces['BlackKnight'][2].rank) * SquareSize, SquareSize, SquareSize);
+    }
+    for(i = 1;i < 9;i++){
+            if(Pieces['BlackPawn'][i].live == 1){
+            ctx.drawImage(BlackPawnImg, Pieces['BlackPawn'][i].file * SquareSize - SquareSize, (8 - Pieces['BlackPawn'][i].rank) * SquareSize, SquareSize, SquareSize);
+        }
+    }
+}
+
+function getNotationFile(n){
+    switch(n) {
+        case 1:
+          return('a')
+        case 2:
+          return('b')
+        case 3:
+          return('c')
+        case 4:
+          return('d')
+        case 5:
+          return('e')
+        case 6:
+          return('f')
+        case 7:
+          return('g')
+        case 8:
+          return('h')
+      }
+
+}
+
+function getFileNotation(n){
+    switch(n) {
+        case 'a':
+          return(1)
+        case 'b':
+          return(2)
+        case 'c':
+          return(3)
+        case 'd':
+          return(4)
+        case 'e':
+          return(5)
+        case 'f':
+          return(6)
+        case 'g':
+          return(7)
+        case 'h':
+          return(8)
+      }
+
+}
+
+function getNotationPiece(p){
+    switch(p) {
+        case 'Pawn':
+          if(Moves[i].take == 'x'){
+            return(getNotationFile(Moves[i].fileFrom))
+          }else{
+            return('')
+          }
+        case 'Knight':
+          return('N')
+        case 'Bishop':
+          return('B')
+        case 'Rook':
+          return('R')
+        case 'Queen':
+          return('Q')
+        case 'King':
+          return('K')
+      }
+
+}
+
+function getNotation(){
+    for(i = 0;i < Moves.length;i++){
+        if(Moves[i].notation == '0-0' || Moves[i].notation == '0-0-0'){ 
+        }else{
+        Moves[i].notation = getNotationPiece(Moves[i].piece.type) + Moves[i].take + getNotationFile(Moves[i].fileTo) + Moves[i].rankTo
+        }
+    }
+}
+
+function getText(){
+    Notation = ''
+    for(i = 0;i < Moves.length;i++){
+        if(i % 2 == 0)
+        Notation += (i / 2 + 1) + '.'
+
+        Notation += Moves[i].notation + ' '
+    }
+}
+
+document.onkeydown = function(e){
+        if(e.key == 'ArrowLeft' && Moves.length > 0){
+            if(Moves[SelectedMove - 1]){
+                if(OnTurn == 'White'){
+                    OnTurn = 'Black'
+                }else{
+                    OnTurn = 'White'
+                }
+                    SelectedMove -= 1
+                    LoadPieces()
+            }
+        }
+        
+        if(e.key == 'ArrowRight' && Moves.length > 0){
+            if(Moves[SelectedMove]){
+                if(OnTurn == 'White'){
+                    OnTurn = 'Black'
+                }else{
+                    OnTurn = 'White'
+                }
+                    SelectedMove += 1
+                    LoadPieces()
+            }
+        } 
+}
+
+window.onload = function() {
+    DrawCheckboard()
+    SetStartingPostion()
+    LoadPieces()
+  }
+
+  function download(filename, text) {
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    element.setAttribute('download', filename);
+    element.click();
+  }
+  
+  // Start file download.;
+  var PGNtext = ''
+  document.getElementById("DownloadButton").addEventListener("click", function(){
+    PGNtext += '[White' + ' ' + '"' + document.getElementById("WhiteNameField").value + '"' + ']\n'
+    PGNtext += '[Black' + ' ' + '"' + document.getElementById("BlackNameField").value + '"' + ']\n'
+    PGNtext += '[Result' + ' ' + '"' + document.getElementById("ResultSelect").value + '"' + ']\n'
+    getNotation()
+    for(i = 0;i < Moves.length;i++){
+        if(i % 2 == 0)
+        PGNtext += (i / 2 + 1) + '. '
+
+        PGNtext += Moves[i].notation + ' '
+    }
+    var filename = document.getElementById("WhiteNameField").value + ' - ' + document.getElementById("BlackNameField").value + ".pgn";
+    download(filename, PGNtext);
+  });
+
+  var NotationMoves = new Array(0)
+  NotationMoves[0] = 'e4'
+  NotationMoves[1] = 'e5'
+  NotationMoves[2] = 'Nf3'
+  NotationMoves[3] = 'Nc6'
+  NotationMoves[4] = 'Bc4'
+
+
+
+  getMoveFromNotation()
+
+  var M;
+  var p;
+  var n;
+  function getMoveFromNotation(){
+        for(k = 0;k < NotationMoves.length;k++){
+            n = NotationMoves[k]
+            p = getPieceFromNotation(n.substring(0,1))
+            if(Pieces[OnTurn + p].length > 1){
+                for(j = 1 ; j < Pieces[OnTurn + p].length; j ++){
+                    if(p == 'Pawn'){
+                        M = new Move(Pieces[OnTurn + p][j].file - '',Pieces[OnTurn + p][j].rank - '',getFileNotation(n.substring(0,1)) - '',n.substring(1,2) - '',Pieces[OnTurn + p][j],'')
+                        if(CheckLegalMove(Pieces[OnTurn + p][j],M) == 'Legal'){
+                            Moves[Moves.length] = M
+                            SelectedMove = Moves.length
+                            if(OnTurn == 'White'){
+                                OnTurn = 'Black'
+                            }else{
+                                OnTurn = 'White'
+                            }
+                            LoadPieces()
+                        }
+                    }else{
+                        M = new Move(Pieces[OnTurn + p][j].file - '',Pieces[OnTurn + p][j].rank - '',getFileNotation(n.substring(1,2)) - '',n.substring(2,3) - '',Pieces[OnTurn + p][j],'')
+                        if(CheckLegalMove(Pieces[OnTurn + p][j],M) == 'Legal'){
+                            Moves[Moves.length] = M
+                            SelectedMove = Moves.length
+                            if(OnTurn == 'White'){
+                                OnTurn = 'Black'
+                            }else{
+                                OnTurn = 'White'
+                            }
+                            LoadPieces()
+                        }
+                    }
+                }
+            }else{
+                M = new Move(Pieces[OnTurn + p].file - '',Pieces[OnTurn + p].rank - '',getFileNotation(n.substring(1,2)) - '',n.substring(2,3) - '',Pieces[OnTurn + p],'')
+                if(CheckLegalMove(Pieces[OnTurn + p],M) == 'Legal'){
+                    Moves[Moves.length] = M
+                    SelectedMove = Moves.length
+                    if(OnTurn == 'White'){
+                        OnTurn = 'Black'
+                    }else{
+                        OnTurn = 'White'
+                    }
+                    LoadPieces()
+                }
+            }
+        }
+    }
+
+  function getPieceFromNotation(p){
+    switch(p) {
+        case 'N':
+          return('Knight')
+        case 'B':
+          return('Bishop')
+        case 'R':
+          return('Rook')
+        case 'Q':
+          return('Queen')
+        case 'K':
+          return('King')
+        case 'King':
+          return('K')
+        default:
+          return('Pawn')
+      }
+  }
+    </script>
+
+</body>
+</html>
